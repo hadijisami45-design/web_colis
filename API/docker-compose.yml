@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  affichage:
+    build : .
+    container_name: affichage
+    images: affichage:2.2
+    networks:
+      - backend
+    ports:
+      '8002:5000'
+
+  ajouter:
+    build: .
+    container_name: ajouter
+    images: ajouter:2.1
+    networks:
+      - backend
+    ports:
+      '8009:5000'
+    
+  
+  mongo:
+    images: mongo:6.0
+    container_name: mongodb
+    networks :
+      - backend
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      27017:27017
+
+  auth:
+    build: .
+    container_name: auth
+    images: auth:2.5
+    networks:
+      - backend
+    ports:
+      '8080:5000'
+    
+
+
+volumes:
+  data:
+
+
+networks:
+  backend:
