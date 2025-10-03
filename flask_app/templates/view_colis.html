@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Consulter un Colis</h1>
+    <form method="post">
+        <label for="colis_id">ID du colis :</label>
+        <input type="text" id="colis_id" name="colis_id" required {% if colis %}value="{{ colis.id }}"{% endif %}>
+        <button type="submit">Rechercher</button>
+    </form>
+    
+    {% if colis %}
+        <h2>Détails du Colis</h2>
+        <p><strong>ID :</strong> {{ colis.id }}</p>
+        <p><strong>Numéro de suivi :</strong> {{ colis.numero_suivi }}</p>
+        <p><strong>Destinataire :</strong> {{ colis.destinataire }}</p>
+        <p><strong>Adresse :</strong> {{ colis.adresse }}</p>
+        <p><strong>Statut :</strong> {{ colis.statut }}</p>
+    {% elif request.method == 'POST' and not colis %}
+        <p>Colis non trouvé.</p>
+    {% endif %}
+{% endblock %}

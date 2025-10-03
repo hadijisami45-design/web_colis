@@ -1,0 +1,55 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+nav ul {
+    list-style: none;
+    background-color: #333;
+    padding: 10px;
+    margin: 0;
+}
+nav ul li {
+    display: inline;
+    margin-right: 10px;
+}
+nav ul li a {
+    color: white;
+    text-decoration: none;
+}
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+}
+.flash {
+    padding: 10px;
+    margin-bottom: 10px;
+}
+.flash.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+.flash.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+}
+input, button {
+    padding: 8px;
+    font-size: 16px;
+}
+button {
+    background-color: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #555;
+}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Liste des Colis</h1>
+    {% if colis_list %}
+        <ul>
+        {% for colis in colis_list %}
+            <li>
+                {{ colis.numero_suivi }} - {{ colis.destinataire }} 
+                (Statut: {{ colis.statut }})
+                <a href="{{ url_for('view_colis') }}" onclick="document.getElementById('colis_id').value='{{ colis.id }}'; this.closest('form').submit(); return false;">
+                    Voir détails
+                </a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Aucun colis trouvé.</p>
+    {% endif %}
+    <form id="view_form" method="post" action="{{ url_for('view_colis') }}" style="display:none;">
+        <input type="hidden" id="colis_id" name="colis_id">
+    </form>
+{% endblock %}

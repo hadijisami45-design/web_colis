@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affichage des Colis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <ul>
+            {% if session.pseudo %}
+                <li>Connecté en tant que {{ session.pseudo }}</li>
+                <li><a href="{{ url_for('index') }}">Liste des Colis</a></li>
+                <li><a href="{{ url_for('view_colis') }}">Consulter un Colis</a></li>
+                <li><a href="{{ url_for('logout') }}">Déconnexion</a></li>
+            {% else %}
+                <li><a href="{{ url_for('login') }}">Connexion</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
