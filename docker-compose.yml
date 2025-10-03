@@ -3,18 +3,6 @@ version: '3.8'
 services:
 
 
-  api :
-    build :
-      context: ./API
-      dockerfile: dockerfile
-    networks: 
-      - backend
-    ports :
-      - "8007:8007"
-    depends_on :
-      - mongo
-
-
   affichage:
     build :  
       context: ./API/Affichage  
@@ -22,10 +10,12 @@ services:
     container_name: affichage
     networks:
       - backend
-    ports:
-      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://172.17.32.196:27017/colis_db
     depends_on:
       - mongo
+    ports:
+      - "8000:8000"
 
 
 
@@ -36,12 +26,27 @@ services:
     container_name: ajouter
     networks:
       - backend
-    ports:
-      - "8001:8001"
+    environment:
+      - MONGO_URI=mongodb://172.17.32.196:27017/colis_db
     depends_on:
       - mongo
+    ports:
+      - "8001:8001"
     
 
+  auth:
+    build:       
+      context: ./API/Auth
+      dockerfile: dockerfile
+    container_name: auth
+    networks:
+      - backend
+    environment:
+      - MONGO_URI=mongodb://172.17.32.196:27017/colis_db
+    depends_on:
+      - mongo
+    ports:
+      - "8002:8002"
 
   
   mongo:
@@ -52,37 +57,32 @@ services:
       - base
     volumes:
       - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=colis_db
     ports:
       - "27017:27017"
 
 
 
-  auth:
-    build:       
-      context: ./API/Auth
-      dockerfile: dockerfile
-    container_name: auth
-    networks:
-      - backend
-    ports:
-      - "8002:8002"
-    depends_on:
-      - mongo
   
 
 
 
-  flask:
-    build:
+  web:
+    build: 
       context: ./flask_app
       dockerfile: dockerfile
-    container_name: flask
-    networks:
-      - backend
     ports:
-      - "5001:5001"
+      - "5000:5000"
+    environment:
+      - MONGO_URI=${cnx}
+      - API_AFFICHAGE_URL=${cnxaffichage}
+      - API_AJOUTER_URL=${cnxajouter}
+      - API_AUTH_URL=${cnxauth}
     depends_on:
       - mongo
+      - affichage
+      - ajouter
       - auth
 
 

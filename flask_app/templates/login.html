@@ -1,25 +1,40 @@
 {% extends "base.html" %}
-
+{% block title %}Connexion - Gestion des Colis{% endblock %}
 {% block content %}
-    <div class="login-container">
-        <h1>Connexion</h1>
-        <form method="post" class="login-form">
-            <div class="form-group">
-                <label for="pseudo">Pseudo :</label>
-                <input type="text" id="pseudo" name="pseudo" required autofocus>
+    <div class="max-w-md mx-auto">
+        {% if error %}
+            <p class="text-red-500 text-center">{{ error }}</p>
+        {% endif %}
+        {% if success %}
+            <p class="text-green-500 text-center">{{ success }}</p>
+        {% endif %}
+        <form action="{{ url_for('login') }}" method="post" class="bg-white p-6 rounded shadow-md">
+            <h3 class="text-xl mb-4 text-center">Connexion</h3>
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700">Nom d'utilisateur</label>
+                <input type="text" id="username" name="username" required class="w-full p-2 border rounded">
             </div>
-            <div class="form-group">
-                <label for="mot_de_passe">Mot de passe :</label>
-                <input type="password" id="mot_de_passe" name="mot_de_passe" required>
+            <div class="mb-4">
+                <label for="password" class="block text-gray-700">Mot de passe</label>
+                <input type="password" id="password" name="password" required class="w-full p-2 border rounded">
             </div>
-            <button type="submit" class="btn-submit">Se connecter</button>
+            <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full">Se Connecter</button>
         </form>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <form action="{{ url_for('register') }}" method="post" class="bg-white p-6 mt-4 rounded shadow-md">
+            <h3 class="text-xl mb-4 text-center">Inscription</h3>
+            <div class="mb-4">
+                <label for="reg_username" class="block text-gray-700">Nom d'utilisateur</label>
+                <input type="text" id="reg_username" name="username" required class="w-full p-2 border rounded">
+            </div>
+            <div class="mb-4">
+                <label for="reg_password" class="block text-gray-700">Mot de passe</label>
+                <input type="password" id="reg_password" name="password" required class="w-full p-2 border rounded">
+            </div>
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700">Email</label>
+                <input type="email" id="email" name="email" required class="w-full p-2 border rounded">
+            </div>
+            <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 w-full">S'Inscrire</button>
+        </form>
     </div>
 {% endblock %}

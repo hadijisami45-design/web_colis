@@ -1,108 +1,200 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from motor.motor_asyncio import AsyncIOMotorClient
-from passlib.hash import bcrypt
-import jwt
+from fastapi import FastAPI, HTTPException, status
+from pymongo import MongoClient
+from pydantic import BaseModel, EmailStr
+from werkzeug.security import generate_password_hash, check_password_hash
+import os
+from typing import Optional
 from datetime import datetime, timedelta
+import jwt
+from jwt import PyJWTError
 
-app = FastAPI()
+app = FastAPI(title="API Authentification", version="1.0.0")
 
-# Configuration
-SECRET_KEY = "votre_clé_secrète_ici"  # Remplacez par une clé sécurisée en production
+# Configuration MongoDB
+MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://172.17.32.196:27017/')
+try:
+    client = MongoClient(MONGO_URI)
+    client.server_info()
+    db = client['colis_db']
+    users_collection = db['users']
+except Exception as e:
+    raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
+
+# Modèles Pydantic
+class UserRegister(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class UserResponse(BaseModel):
+    message: str
+    user_id: str
+    username: Optional[str] = None
+
+class LoginResponse(BaseModel):
+    message: str
+    user_id: str
+    username: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+@app.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register(user: UserRegister):
+    """ 
+    Créer un nouveau compte utilisateur 
+    """
+    try:
+        # Vérifier si l'utilisateur existe déjà
+        existing_user = users_collection.find_one({'username': user.username})
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Nom d'utilisateur déjà utilisé"
+            )
+        
+        # Vérifier si l'email existe déjà
+        existing_email = users_collection.find_one({'email': user.email})
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email déjà utilisé"
+            )
+        
+        # Hasher le mot de passe
+        hashed_password = generate_password_hash(user.password)
+        
+        nouvel_utilisateur = {
+            'username': user.username,
+            'password': hashed_password,
+            'email': user.email
+        }
+        
+        result = users_collection.insert_one(nouvel_utilisateur)
+        
+        return UserResponse(
+            message="Utilisateur créé avec succès",
+            user_id=str(result.inserted_id)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la création du compte: {str(e)}"
+        )
+
+@app.post("/login", response_model=LoginResponse)
+async def login(user: UserLogin):
+    """ 
+    Connexion utilisateur 
+    """
+    try:
+        utilisateur = users_collection.find_one({'username': user.username})
+        
+        if utilisateur and check_password_hash(utilisateur['password'], user.password):
+            return LoginResponse(
+                message="Connexion réussie",
+                user_id=str(utilisateur['_id']),
+                username=utilisateur['username']
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Identifiants incorrects"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la connexion: {str(e)}"
+        )
+
+# Routes supplémentaires utiles
+@app.get("/users/{username}")
+async def get_user_info(username: str):
+    """ 
+    Récupérer les informations d'un utilisateur (sans le mot de passe) 
+    """
+    try:
+        utilisateur = users_collection.find_one({'username': username})
+        
+        if not utilisateur:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Utilisateur non trouvé"
+            )
+        
+        return {
+            'user_id': str(utilisateur['_id']),
+            'username': utilisateur['username'],
+            'email': utilisateur['email']
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la récupération des informations: {str(e)}"
+        )
+
+# Clé secrète pour JWT (à mettre dans les variables d'environnement en production)
+SECRET_KEY = os.environ.get('SECRET_KEY', 'votre_cle_secrete_ici')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-# Connexion MongoDB (asynchrone avec motor)
-@app.on_event("startup")
-async def startup_db_client():
-    app.mongodb_client = AsyncIOMotorClient("mongodb://172.17.32.196:27017/")
-    app.database = app.mongodb_client["logistique"]
-    app.utilisateurs_collection = app.database["utilisateurs"]
-    # Créer un index unique sur pseudo pour éviter les doublons
-    await app.utilisateurs_collection.create_index("pseudo", unique=True)
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    app.mongodb_client.close()
-
-# Modèle pour validation des données reçues
-class UserLogin(BaseModel):
-    pseudo: str
-    mot_de_passe: str
-
-# Modèle pour l'inscription (optionnel, si vous voulez des champs supplémentaires)
-class UserSignup(BaseModel):
-    pseudo: str
-    mot_de_passe: str
-
-# Fonction pour créer un token JWT
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-# Route pour l'authentification
-@app.post("/login", description="Authentifie un utilisateur et retourne un token JWT")
-async def login(user: UserLogin):
+@app.post("/login-jwt", response_model=Token)
+async def login_jwt(user: UserLogin):
+    """ 
+    Connexion avec génération de token JWT 
+    """
     try:
-        # Recherche l'utilisateur dans la base
-        utilisateur = await app.utilisateurs_collection.find_one({"pseudo": user.pseudo})
-        if utilisateur is None:
-            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-
-        # Vérifie le mot de passe
-        if not bcrypt.verify(user.mot_de_passe, utilisateur["mot_de_passe"]):
-            raise HTTPException(status_code=401, detail="Mot de passe incorrect")
-
-        # Créer un token JWT
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": utilisateur["pseudo"]}, expires_delta=access_token_expires
+        utilisateur = users_collection.find_one({'username': user.username})
+        
+        if utilisateur and check_password_hash(utilisateur['password'], user.password):
+            # Créer le token JWT
+            access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            expire = datetime.utcnow() + access_token_expires
+            
+            token_data = {
+                "sub": utilisateur['username'],
+                "user_id": str(utilisateur['_id']),
+                "exp": expire
+            }
+            
+            access_token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
+            
+            return Token(
+                access_token=access_token,
+                token_type="bearer"
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Identifiants incorrects"
+            )
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la connexion: {str(e)}"
         )
 
-        return {
-            "message": "Connexion réussie",
-            "pseudo": utilisateur["pseudo"],
-            "access_token": access_token,
-            "token_type": "bearer"
-        }
-
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
-
-# Route pour l'inscription
-@app.post("/signup", description="Crée un nouvel utilisateur")
-async def signup(user: UserSignup):
-    try:
-        # Vérifier si l'utilisateur existe déjà
-        existing_user = await app.utilisateurs_collection.find_one({"pseudo": user.pseudo})
-        if existing_user:
-            raise HTTPException(status_code=400, detail=f"L'utilisateur avec le pseudo {user.pseudo} existe déjà")
-
-        # Hacher le mot de passe
-        hashed_password = bcrypt.hash(user.mot_de_passe)
-        nouveau_user = {
-            "pseudo": user.pseudo,
-            "mot_de_passe": hashed_password
-        }
-
-        # Insérer le nouvel utilisateur
-        result = await app.utilisateurs_collection.insert_one(nouveau_user)
-        created_user = await app.utilisateurs_collection.find_one({"_id": result.inserted_id})
-
-        if not created_user:
-            raise HTTPException(status_code=500, detail="Erreur lors de la création de l'utilisateur")
-
-        return {"message": "Compte créé avec succès", "pseudo": user.pseudo}
-
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host='0.0.0.0', port=8002, reload=True)

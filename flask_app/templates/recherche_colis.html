@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Recherche - Gestion des Colis{% endblock %}
+{% block content %}
+    <h2 class="text-2xl mb-4">Rechercher un Colis</h2>
+    <form action="{{ url_for('recherche_colis') }}" method="get" class="mb-4">
+        <input type="text" name="q" value="{{ query }}" placeholder="Rechercher par destinataire, adresse, statut ou ID" class="p-2 border rounded">
+        <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Rechercher</button>
+    </form>
+    {% if colis %}
+        <table class="w-full bg-white shadow-md rounded-lg overflow-hidden">
+            <thead class="bg-gray-200">
+                <tr>
+                    <th class="p-2">ID</th>
+                    <th class="p-2">Destinataire</th>
+                    <th class="p-2">Adresse</th>
+                    <th class="p-2">Poids</th>
+                    <th class="p-2">Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for colis in colis %}
+                    <tr class="border-t">
+                        <td class="p-2">{{ colis._id }}</td>
+                        <td class="p-2">{{ colis.destinataire }}</td>
+                        <td class="p-2">{{ colis.adresse }}</td>
+                        <td class="p-2">{{ colis.poids }} kg</td>
+                        <td class="p-2">{{ colis.statut }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-gray-600">Aucun colis trouvé.</p>
+    {% endif %}
+    <a href="{{ url_for('index') }}" class="mt-4 inline-block bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Retour</a>
+{% endblock %}

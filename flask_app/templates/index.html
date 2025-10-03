@@ -1,23 +1,36 @@
 {% extends "base.html" %}
-
+{% block title %}Accueil - Gestion des Colis{% endblock %}
 {% block content %}
-    <h1>Liste des Colis</h1>
-    {% if colis_list %}
-        <ul>
-        {% for colis in colis_list %}
-            <li>
-                {{ colis.numero_suivi }} - {{ colis.destinataire }} 
-                (Statut: {{ colis.statut }})
-                <a href="{{ url_for('view_colis') }}" onclick="document.getElementById('colis_id').value='{{ colis.id }}'; this.closest('form').submit(); return false;">
-                    Voir détails
-                </a>
-            </li>
-        {% endfor %}
-        </ul>
+    <h2 class="text-2xl mb-4">Tous les Colis</h2>
+    {% if colis %}
+        <table class="w-full bg-white shadow-md rounded-lg overflow-hidden">
+            <thead class="bg-gray-200">
+                <tr>
+                    <th class="p-2">ID</th>
+                    <th class="p-2">Destinataire</th>
+                    <th class="p-2">Adresse</th>
+                    <th class="p-2">Poids</th>
+                    <th class="p-2">Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for colis in colis %}
+                    <tr class="border-t">
+                        <td class="p-2">{{ colis._id }}</td>
+                        <td class="p-2">{{ colis.destinataire }}</td>
+                        <td class="p-2">{{ colis.adresse }}</td>
+                        <td class="p-2">{{ colis.poids }} kg</td>
+                        <td class="p-2">{{ colis.statut }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
-        <p>Aucun colis trouvé.</p>
+        <p class="text-gray-600">Aucun colis disponible.</p>
     {% endif %}
-    <form id="view_form" method="post" action="{{ url_for('view_colis') }}" style="display:none;">
-        <input type="hidden" id="colis_id" name="colis_id">
-    </form>
+    <div class="mt-4">
+        <a href="{{ url_for('mes_colis') }}" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Mes Colis</a>
+        <a href="{{ url_for('page_ajouter_colis') }}" class="ml-2 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">Ajouter un Colis</a>
+        <a href="{{ url_for('recherche_colis') }}" class="ml-2 bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600">Rechercher un Colis</a>
+    </div>
 {% endblock %}
