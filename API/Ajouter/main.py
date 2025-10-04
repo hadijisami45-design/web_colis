@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-# Configuration MongoDB
+
 MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://172.17.32.196:27017/')
 try:
     client = MongoClient(MONGO_URI)
@@ -17,7 +17,6 @@ try:
 except Exception as e:
     raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
 
-# Modèle Pydantic pour la validation des données
 class ColisCreate(BaseModel):
     destinataire: str
     adresse: str

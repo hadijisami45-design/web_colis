@@ -10,7 +10,7 @@ from jwt import PyJWTError
 
 app = FastAPI(title="API Authentification", version="1.0.0")
 
-# Configuration MongoDB
+
 MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://172.17.32.196:27017/')
 try:
     client = MongoClient(MONGO_URI)
@@ -46,9 +46,7 @@ class Token(BaseModel):
 
 @app.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user: UserRegister):
-    """ 
-    Créer un nouveau compte utilisateur 
-    """
+
     try:
         # Vérifier si l'utilisateur existe déjà
         existing_user = users_collection.find_one({'username': user.username})
@@ -58,7 +56,7 @@ async def register(user: UserRegister):
                 detail="Nom d'utilisateur déjà utilisé"
             )
         
-        # Vérifier si l'email existe déjà
+        
         existing_email = users_collection.find_one({'email': user.email})
         if existing_email:
             raise HTTPException(
@@ -66,7 +64,7 @@ async def register(user: UserRegister):
                 detail="Email déjà utilisé"
             )
         
-        # Hasher le mot de passe
+        
         hashed_password = generate_password_hash(user.password)
         
         nouvel_utilisateur = {
@@ -118,12 +116,10 @@ async def login(user: UserLogin):
             detail=f"Erreur lors de la connexion: {str(e)}"
         )
 
-# Routes supplémentaires utiles
+
 @app.get("/users/{username}")
 async def get_user_info(username: str):
-    """ 
-    Récupérer les informations d'un utilisateur (sans le mot de passe) 
-    """
+
     try:
         utilisateur = users_collection.find_one({'username': username})
         
@@ -147,7 +143,6 @@ async def get_user_info(username: str):
             detail=f"Erreur lors de la récupération des informations: {str(e)}"
         )
 
-# Clé secrète pour JWT (à mettre dans les variables d'environnement en production)
 SECRET_KEY = os.environ.get('SECRET_KEY', 'votre_cle_secrete_ici')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -158,14 +153,11 @@ class Token(BaseModel):
 
 @app.post("/login-jwt", response_model=Token)
 async def login_jwt(user: UserLogin):
-    """ 
-    Connexion avec génération de token JWT 
-    """
+
     try:
         utilisateur = users_collection.find_one({'username': user.username})
         
         if utilisateur and check_password_hash(utilisateur['password'], user.password):
-            # Créer le token JWT
             access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
             expire = datetime.utcnow() + access_token_expires
             

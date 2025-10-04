@@ -7,14 +7,14 @@ import os
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'votre_cle_secrete_tres_longue_et_complexe')
 
-# Configuration MongoDB
+
 MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://172.17.32.196:27017/')
 client = MongoClient(MONGO_URI)
 db = client['colis_db']
 colis_collection = db['colis']
 users_collection = db['users']
 
-# URLs des microservices
+
 API_AFFICHAGE_URL = os.environ.get('API_AFFICHAGE_URL', 'http://localhost:8000')
 API_AJOUTER_URL = os.environ.get('API_AJOUTER_URL', 'http://localhost:8001')
 API_AUTH_URL = os.environ.get('API_AUTH_URL', 'http://localhost:8002')
@@ -57,7 +57,7 @@ def recherche_colis():
             response = requests.get(f"{API_AFFICHAGE_URL}/colis")
             all_colis = response.json() if response.status_code == 200 else []
             
-            # Recherche dans les colis
+            
             for colis in all_colis:
                 if (query.lower() in colis.get('destinataire', '').lower() or 
                     query.lower() in colis.get('adresse', '').lower() or 
@@ -113,7 +113,7 @@ def login():
         password = request.form['password']
         
         try:
-            # Authentifier via le microservice Auth
+            
             response = requests.post(f"{API_AUTH_URL}/login", 
                                    json={'username': username, 'password': password})
             

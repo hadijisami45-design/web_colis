@@ -6,11 +6,11 @@ from typing import List, Dict, Any
 
 app = FastAPI()
 
-# Configuration MongoDB
+
 MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://172.17.32.196:27017/')
 try:
     client = MongoClient(MONGO_URI)
-    client.server_info()  # Test connection
+    client.server_info()  
     db = client['colis_db']
     colis_collection = db['colis']
 except Exception as e:
