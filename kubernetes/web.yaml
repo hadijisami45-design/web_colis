@@ -68,8 +68,8 @@ spec:
   selector:
     app: web
   ports:
-  - port: 5001
-    targetPort: 5001
+  - port: 5000
+    targetPort: 5000
   type: ClusterIP
 ---
 apiVersion: v1
@@ -82,5 +82,5 @@ spec:
     app: web
   ports:
   - port: 80
-    targetPort: 5001
+    targetPort: 5000
   type: LoadBalancer
