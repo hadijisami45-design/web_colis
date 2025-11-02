@@ -73,7 +73,7 @@ services:
       context: ./flask_app
       dockerfile: dockerfile
     ports:
-      - "5001:5001"
+      - "5000:5000"
     environment:
       - MONGO_URI=${cnx}
       - API_AFFICHAGE_URL=${cnxaffichage}
