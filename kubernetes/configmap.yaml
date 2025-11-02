@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: colis-app
+data:
+  MONGO_URI: "mongodb://mongodb:27017/colis_db"
+  API_AFFICHAGE_URL: "http://affichage-service:8000"
+  API_AJOUTER_URL: "http://ajouter-service:8001"
+  API_AUTH_URL: "http://auth-service:8002"
