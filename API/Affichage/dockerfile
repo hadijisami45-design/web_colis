@@ -1,13 +1,23 @@
 FROM python:3.11-slim
-WORKDIR /Affichage
-COPY . .
 
+# Créer un utilisateur non-root
 RUN useradd -m appuser
 
+# Créer le dossier de travail
+WORKDIR /Affichage
+
+# Copier requirements et installer les dépendances
 COPY requirements.txt .
-RUN pip install pytest
-
-
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copier le reste du code
+COPY . .
+
+# Changer la propriété du dossier pour appuser
+RUN chown -R appuser:appuser /Affichage
+
+# Passer à l'utilisateur non-root
 USER appuser
+
+# Commande par défaut
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
