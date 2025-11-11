@@ -4,4 +4,4 @@ pymongo
 werkzeug
 pyjwt
 pydantic[email]
-pytest
+
