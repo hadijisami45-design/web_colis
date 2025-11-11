@@ -1,12 +1,12 @@
-flask==2.3.2
-requests==2.28.1
-uvicorn==0.23.2
-fastapi==0.100.0
-uvicorn==0.23.2
-motor==3.1.1
-pymongo==4.3.3
-pydantic==1.10.12
-python-dotenv==1.0.0
-passlib[bcrypt]==1.7.4
+flask
+requests
+uvicorn
+fastapi
+uvicorn
+motor
+pymongo
+pydantic
+python-dotenv
+passlib[bcrypt]
 pytest
 
